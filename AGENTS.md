@@ -81,11 +81,12 @@ The controller serves real guests, so:
 - Commit to `main` as focused, signed, Conventional Commits; push low-risk
   changes without asking, and ask before anything that publishes or could
   break a deployment.
-- Pushes to `main` publish `:main` and `:sha-<short>`. Every change to code
-  or the image gets a release: wait for the Release workflow on `main` to
-  pass (it runs the tests before publishing `:main`), then push a signed
-  annotated tag. `vX.Y.Z` publishes `X.Y.Z`, `X.Y` and `latest`;
-  `vX.Y.Z-rc.N` publishes only `X.Y.Z-rc.N`. Tag notes list Added, Changed
+- Images are published only from version tags; pushes to `main` publish
+  nothing. Every change to code or the image that should ship gets a
+  release: wait for the Test workflow on `main` to pass, then push a signed
+  annotated tag. The Release workflow runs the tests again on the tagged
+  commit and publishes only if they pass. `vX.Y.Z` publishes `X.Y.Z`, `X.Y`
+  and `latest`; `vX.Y.Z-rc.N` publishes only `X.Y.Z-rc.N`. Tag notes list Added, Changed
   and Fixed for people running the app.
 - The release workflow needs the repository secret `GHCR_TOKEN`, a GitHub
   classic PAT with `write:packages`.

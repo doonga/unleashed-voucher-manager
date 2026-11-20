@@ -287,7 +287,7 @@ Manager role cannot delete. The README explains how to create one.
 
 - Hosted on Forgejo, push-mirrored to
   `github.com/greyrock-labs/unleashed-voucher-manager`.
-- **`.forgejo/workflows/test.yaml`** on pull requests:
+- **`.forgejo/workflows/test.yaml`** on pull requests and pushes to `main`:
   - backend: `cargo fmt --check`, `cargo clippy -- -D warnings`,
     `cargo test --locked`;
   - frontend: `npm ci`, `tsc --noEmit`, `npm test` (`node --test` over
@@ -295,11 +295,11 @@ Manager role cannot delete. The README explains how to create one.
   - an amd64 image build without push.
 - **`.forgejo/workflows/lint.yaml`** on pull requests: actionlint and
   oxfmt check.
-- **`.forgejo/workflows/release.yaml`** on pushes to `main` and `v*` tags
-  runs the same tests first and publishes nothing if they fail, then builds
+- **`.forgejo/workflows/release.yaml`** on `v*` tags only (pushes to `main`
+  publish nothing) runs the same tests first and publishes nothing if they
+  fail, then builds
   `linux/amd64` and `linux/arm64` and pushes to
   `ghcr.io/greyrock-labs/unleashed-voucher-manager`:
-  - `main` publishes `:main` and `:sha-<short>`;
   - `vX.Y.Z` publishes `X.Y.Z`, `X.Y` and `latest`;
   - a pre-release tag such as `vX.Y.Z-rc.1` publishes only `X.Y.Z-rc.1`.
 
@@ -319,7 +319,7 @@ Manager role cannot delete. The README explains how to create one.
   modules at runtime, or must ship the target platform's build of them.
 - **Releases:** a signed annotated tag is the only version input, and every
   change to code or the image gets a release. Testing before `v1.0.0` uses
-  `:main` images and `v1.0.0-rc.N` tags. `v1.0.0` is tagged once a release
+  local builds and `v1.0.0-rc.N` tags. `v1.0.0` is tagged once a release
   candidate has passed the live check and run in a real deployment; the
   release candidate images may then be deleted.
 - `README.md` follows UVM's, rewritten for Unleashed: setup, every variable,
