@@ -1,0 +1,14 @@
+
+{"result":"null",
+ "errorMsg":"Invalid Characters detected in {1}.",
+"key":"473119",
+        "fullname":"null",
+        "expiretime":"1795217352",
+        "wlan":"Guest",        
+        "emailaddr":"null",
+        "phonenumber":"null",
+        "newnum":"null",
+        "totalnum":"null",
+        "duration":"null",
+        "duration_unit":"~~",        
+    "ids":""}
