@@ -312,10 +312,10 @@
   }
 
   select {
-    @apply appearance-none bg-surface bg-interactive-hover border border-default cursor-pointer focus-accent px-3 py-2 rounded-lg w-full;
+    @apply appearance-none bg-surface bg-interactive-hover border border-default cursor-pointer focus-accent px-3 py-2 rounded-lg w-full disabled:opacity-50 disabled:cursor-not-allowed;
   }
   input {
-    @apply bg-surface border border-default focus-accent px-3 py-2 rounded-lg w-full;
+    @apply bg-surface border border-default focus-accent px-3 py-2 rounded-lg w-full disabled:opacity-50 disabled:cursor-not-allowed;
   }
 
   /* Scrollbars */
