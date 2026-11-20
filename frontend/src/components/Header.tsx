@@ -47,7 +47,12 @@ export default function Header() {
             height={35}
             loading="eager"
             alt="Unleashed Voucher Manager logo"
-            className={"shrink-0" + (isLogoInvertible ? " dark:invert" : "")}
+            // Inverting turns the white tile black and the dog white; the hue
+            // rotation brings the orange back after the inversion.
+            className={
+              "shrink-0" +
+              (isLogoInvertible ? " dark:invert dark:hue-rotate-180" : "")
+            }
           />
           <h1 className="text-xl md:text-2xl font-semibold text-brand">
             <span className="block sm:hidden">Vouchers</span>

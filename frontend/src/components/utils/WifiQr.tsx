@@ -18,7 +18,7 @@ export default function WifiQr({
   className,
   sizeRatio = 0.8,
   overrideSize,
-  imageSrc = "/logo.svg",
+  imageSrc = "/qr-logo.svg",
 }: Props) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [qrSize, setQrSize] = useState<number>(220);
