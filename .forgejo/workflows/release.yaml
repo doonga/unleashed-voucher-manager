@@ -1,0 +1,93 @@
+---
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - v*
+
+concurrency:
+  group: ${{ forgejo.ref }}-${{ forgejo.workflow }}
+  cancel-in-progress: false
+
+jobs:
+  versions:
+    name: versions
+    runs-on: ubuntu-latest
+    outputs:
+      rust: ${{ steps.versions.outputs.rust }}
+      node: ${{ steps.versions.outputs.node }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install tools
+        uses: https://github.com/jdx/mise-action@90f833d396d0cc3674b631d2d225e306476c303a # v5.2.10
+
+      - name: Read tool versions
+        id: versions
+        run: |
+          echo "rust=$(mise config get tools.rust.version)" >> "$GITHUB_OUTPUT"
+          echo "node=$(mise config get tools.node)" >> "$GITHUB_OUTPUT"
+
+  image:
+    name: image
+    needs: versions
+    runs-on: docker
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Docker Buildx
+        uses: https://github.com/docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+
+      - name: Log in to GHCR
+        uses: https://github.com/docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4.8.0
+        with:
+          registry: ghcr.io
+          username: doonga
+          password: ${{ secrets.GHCR_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: https://github.com/docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
+        env:
+          # GHCR links the package to its repository from the image index annotations.
+          DOCKER_METADATA_ANNOTATIONS_LEVELS: manifest,index
+        with:
+          images: ghcr.io/greyrock-labs/unleashed-voucher-manager
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=ref,event=branch
+            type=sha,prefix=sha-
+          labels: |
+            org.opencontainers.image.source=https://github.com/greyrock-labs/unleashed-voucher-manager
+            org.opencontainers.image.url=https://github.com/greyrock-labs/unleashed-voucher-manager
+          annotations: |
+            org.opencontainers.image.source=https://github.com/greyrock-labs/unleashed-voucher-manager
+            org.opencontainers.image.url=https://github.com/greyrock-labs/unleashed-voucher-manager
+
+      - name: Build and push
+        uses: https://github.com/docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        env:
+          BUILDX_GIT_INFO: false
+        with:
+          context: .
+          push: true
+          platforms: linux/amd64,linux/arm64
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          annotations: ${{ steps.meta.outputs.annotations }}
+          sbom: true
+          provenance: false
+          build-args: |
+            RUST_VERSION=${{ needs.versions.outputs.rust }}
+            NODE_VERSION=${{ needs.versions.outputs.node }}
