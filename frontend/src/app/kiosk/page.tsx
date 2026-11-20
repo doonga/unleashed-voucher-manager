@@ -9,15 +9,18 @@ import { api } from "@/utils/api";
 import { formatCode } from "@/utils/format";
 import { useGlobal } from "@/contexts/GlobalContext";
 
+const REFRESH_INTERVAL_MS = 60_000;
+
 export default function KioskPage() {
   const [voucher, setVoucher] = useState<Voucher | null>(null);
   const [state, setState] = useState<TriState | null>(null);
   const { wifiConfig, wifiString } = useGlobal();
 
-  const load = useCallback(async () => {
-    if (state === "loading") return;
+  // `quiet` refreshes keep the current voucher on screen instead of showing
+  // the spinner.
+  const load = useCallback(async (quiet = false) => {
     try {
-      setState("loading");
+      if (!quiet) setState("loading");
       await api.getRollingVoucher().then(setVoucher);
       setState("ok");
     } catch (error: any) {
@@ -36,8 +39,16 @@ export default function KioskPage() {
 
   useEffect(() => {
     load();
-    window.addEventListener("vouchersUpdated", load);
-    return () => window.removeEventListener("vouchersUpdated", load);
+    const refresh = () => load(true);
+    window.addEventListener("vouchersUpdated", refresh);
+    // An unused voucher still counts down on the controller and disappears
+    // when it expires, and a guest can use it without /welcome loading, so
+    // check every minute and create the next one when none is waiting.
+    const timer = window.setInterval(refresh, REFRESH_INTERVAL_MS);
+    return () => {
+      window.removeEventListener("vouchersUpdated", refresh);
+      window.clearInterval(timer);
+    };
   }, [load]);
 
   const renderContent = useCallback(() => {

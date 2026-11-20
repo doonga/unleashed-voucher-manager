@@ -1,5 +1,6 @@
 import { NextResponse, NextRequest } from "next/server";
 import { isInBlockedSubnet } from "@/utils/ipv4";
+import { clientIpFromForwarded } from "@/utils/forwarded";
 
 export const config = {
   matcher: ["/", "/rust-api/:path*"],
@@ -7,8 +8,6 @@ export const config = {
 
 const DEFAULT_FRONTEND_TO_BACKEND_URL = "http://127.0.0.1";
 const DEFAULT_BACKEND_BIND_PORT = "8080";
-
-const IPV6_IPV4_MAPPED_PREFIX = "::ffff:";
 
 const guestAllowedPaths = [
   "/welcome",
@@ -20,13 +19,10 @@ const guestAllowedPaths = [
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Extract client IP
-  let clientIp = request.headers.get("x-forwarded-for") || "";
-
-  // Strip IPv6 prefix if it's a mapped IPv4
-  if (clientIp.startsWith(IPV6_IPV4_MAPPED_PREFIX)) {
-    clientIp = clientIp.replace(IPV6_IPV4_MAPPED_PREFIX, "");
-  }
+  // The client's address is the last X-Forwarded-For entry, the one the
+  // reverse proxy in front of the app appended; earlier entries can be forged.
+  const clientIp =
+    clientIpFromForwarded(request.headers.get("x-forwarded-for")) ?? "";
 
   // Restrict access based on GUEST_SUBNETWORK env variable
   const guestSubnet = process.env.GUEST_SUBNETWORK;
@@ -52,11 +48,7 @@ export function proxy(request: NextRequest) {
       `${backendUrl}:${backendPort}${backendPath}${request.nextUrl.search}`,
     );
 
-    const response = NextResponse.rewrite(backendFullUrl, { request });
-
-    // Forward the real client IP
-    response.headers.set("x-forwarded-for", clientIp);
-    return response;
+    return NextResponse.rewrite(backendFullUrl, { request });
   }
 
   return NextResponse.next();

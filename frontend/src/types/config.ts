@@ -10,15 +10,12 @@ export type RuntimeConfig = {
 };
 
 export const DEFAULT_RUNTIME_CONFIG: RuntimeConfig = {
-  IS_LOGO_INVERTIBLE: false,
+  IS_LOGO_INVERTIBLE: true,
   PRINT_CONFIG: {
     showName: true,
     showLogo: true,
     showDuration: true,
     showMaxGuests: true,
-    showDataUsageLimit: true,
-    showRxRateLimit: true,
-    showTxRateLimit: true,
     showId: true,
     showPrintTime: true,
   },

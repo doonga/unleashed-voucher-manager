@@ -21,30 +21,25 @@ async function call<T>(endpoint: string, opts: RequestInit = {}) {
     ...opts,
   });
   if (!res.ok) {
-    const error = new Error(res.statusText);
+    // The backend explains rejected requests in the response body.
+    const message = (await res.text().catch(() => "")).trim();
+    const error = new Error(message || res.statusText);
     (error as any).status = res.status;
     throw error;
   }
   return res.json() as Promise<T>;
 }
 
-export const MIN_VOUCHER_DURATION_MINUTES = 1;
-export const MAX_VOUCHER_DURATION_MINUTES = 525_600;
+export const MIN_VOUCHER_DURATION_HOURS = 1;
+export const MAX_VOUCHER_DURATION_HOURS = 8_760;
 
 export const MIN_VOUCHER_COUNT = 1;
-export const MAX_VOUCHER_COUNT = 1000;
+export const MAX_VOUCHER_COUNT = 100;
 
 export const MIN_VOUCHER_GUESTS = 1;
 export const MAX_VOUCHER_GUESTS = 1000;
 
-export const MIN_VOUCHER_DATA_MB = 1;
-export const MAX_VOUCHER_DATA_MB = 1_048_576;
-
-export const MIN_VOUCHER_DOWNLOAD_KBPS = 2;
-export const MAX_VOUCHER_DOWNLOAD_KBPS = 100_000;
-
-export const MIN_VOUCHER_UPLOAD_KBPS = 2;
-export const MAX_VOUCHER_UPLOAD_KBPS = 100_000;
+export { MIN_KEY_LENGTH as MIN_VOUCHER_KEY_LENGTH, MAX_KEY_LENGTH as MAX_VOUCHER_KEY_LENGTH } from "./validation";
 
 export const api = {
   getAllVouchers: () => call<VoucherGetResponse>("/vouchers"),

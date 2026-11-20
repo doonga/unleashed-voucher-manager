@@ -9,9 +9,7 @@ export interface Voucher {
   expiresAt?: string | null;
   expired: boolean;
   timeLimitMinutes: number;
-  dataUsageLimitMBytes?: number | null;
-  rxRateLimitKbps?: number | null;
-  txRateLimitKbps?: number | null;
+  remarks: string;
 }
 
 export interface VoucherCreateData extends Omit<
@@ -23,8 +21,12 @@ export interface VoucherCreateData extends Omit<
   | "activatedAt"
   | "expiresAt"
   | "expired"
+  | "remarks"
 > {
   count: number;
+  /** A custom key; only for a single voucher. */
+  code?: string;
+  remarks?: string;
 }
 
 export interface VoucherGetResponse {

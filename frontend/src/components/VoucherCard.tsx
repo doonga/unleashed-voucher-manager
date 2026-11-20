@@ -47,6 +47,9 @@ const VoucherCard = ({ voucher, selected, editMode, onClick }: Props) => {
       <div className="mb-2">
         <div className="text-xl voucher-code">{formatCode(voucher.code)}</div>
         <div className="text-lg font-semibold truncate">{voucher.name}</div>
+        {voucher.remarks && (
+          <div className="text-sm text-muted truncate">{voucher.remarks}</div>
+        )}
       </div>
 
       <div className="space-y-1 text-sm text-secondary">

@@ -1,6 +1,7 @@
 import "server-only";
 
 import { DEFAULT_RUNTIME_CONFIG, RuntimeConfig } from "@/types/config";
+import { parseBoolean } from "@/utils/boolean";
 import fs from "fs";
 import path from "path";
 
@@ -10,6 +11,11 @@ function withDefaults(config: Partial<RuntimeConfig>): RuntimeConfig {
   return {
     ...DEFAULT_RUNTIME_CONFIG,
     ...config,
+    // Environment values arrive as strings, and "false" is truthy.
+    IS_LOGO_INVERTIBLE: parseBoolean(
+      config.IS_LOGO_INVERTIBLE,
+      DEFAULT_RUNTIME_CONFIG.IS_LOGO_INVERTIBLE,
+    ),
     PRINT_CONFIG: {
       ...DEFAULT_RUNTIME_CONFIG.PRINT_CONFIG,
       ...config.PRINT_CONFIG,

@@ -33,9 +33,7 @@ export default function TestTab() {
     timeLimitMinutes: 1440,
     activatedAt: null,
     expiresAt: "2025-12-31",
-    dataUsageLimitMBytes: null,
-    rxRateLimitKbps: null,
-    txRateLimitKbps: null,
+    remarks: "",
   };
 
   return (
@@ -78,6 +76,7 @@ export default function TestTab() {
               authorizedGuestCount: 0,
               expired: false,
               timeLimitMinutes: 1440,
+              remarks: "",
             }}
             editMode={false}
             selected={false}
@@ -93,6 +92,7 @@ export default function TestTab() {
               authorizedGuestCount: 0,
               expired: false,
               timeLimitMinutes: 1440,
+              remarks: "",
             }}
             editMode={true}
             selected={true}
@@ -109,6 +109,7 @@ export default function TestTab() {
               expired: true,
               timeLimitMinutes: 1440,
               expiresAt: "2025-12-31",
+              remarks: "",
             }}
             editMode={true}
             selected={false}
