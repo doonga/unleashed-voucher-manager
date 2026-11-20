@@ -7,3 +7,6 @@
 .DS_Store
 .idea/
 .vscode/
+
+# Image signing private key: lives only in the Forgejo secret and a password manager.
+cosign.key

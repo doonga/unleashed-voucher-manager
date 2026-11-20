@@ -2,8 +2,8 @@
 # yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
 name: Test
 
-# Release tags run the same tests in the Release workflow before anything is
-# published.
+# The Publish release workflow runs the same tests on the release commit before
+# anything is published.
 on:
   pull_request:
   push:
@@ -41,6 +41,9 @@ jobs:
 
       - name: Build frontend
         run: mise run frontend-build
+
+      - name: Test release scripts
+        run: mise run release-scripts-test
 
   image:
     name: image

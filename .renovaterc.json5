@@ -1,6 +1,6 @@
 {
   $schema: "https://docs.renovatebot.com/renovate-schema.json",
-  extends: ["config:recommended"],
+  extends: ["local>todd/renovate-config"],
   // Keep package-lock.json in step with package.json and refresh it weekly.
   lockFileMaintenance: { enabled: true },
   postUpdateOptions: ["npmDedupe"],
@@ -8,4 +8,36 @@
   "github-actions": {
     managerFilePatterns: ["/^\\.forgejo/workflows/.+\\.ya?ml$/"],
   },
+  // Commit types decide releases (see cliff.toml): fix releases a patch, chore
+  // releases nothing. These rules come after the shared preset's, so they win
+  // over its feat/feat! types for minor and major updates.
+  packageRules: [
+    {
+      description: "Dependency updates never release on their own and are never breaking for users of the app",
+      matchPackageNames: ["*"],
+      semanticCommitType: "chore",
+      commitMessagePrefix: "{{semanticCommitType}}({{semanticCommitScope}}):",
+    },
+    {
+      description: "Frontend runtime dependencies ship in the image, so they release a patch",
+      matchManagers: ["npm"],
+      matchDepTypes: ["dependencies"],
+      semanticCommitType: "fix",
+      semanticCommitScope: "deps",
+    },
+    {
+      description: "Backend crates ship in the binary, so they release a patch",
+      matchManagers: ["cargo"],
+      matchDepTypes: ["dependencies"],
+      semanticCommitType: "fix",
+      semanticCommitScope: "deps",
+    },
+    {
+      description: "The Rust toolchain builds the binary and Node runs the frontend, so they release a patch",
+      matchManagers: ["mise"],
+      matchDepNames: ["rust", "node"],
+      semanticCommitType: "fix",
+      semanticCommitScope: "deps",
+    },
+  ],
 }
