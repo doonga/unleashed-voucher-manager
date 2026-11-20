@@ -12,6 +12,7 @@ import {
   MIN_VOUCHER_GUESTS,
 } from "@/utils/api";
 import { map } from "@/utils/functional";
+import { createErrorMessage } from "@/utils/createError";
 import { notify } from "@/utils/notifications";
 import { keyError, nameError, remarksError } from "@/utils/validation";
 import { useCallback, useState, SubmitEvent } from "react";
@@ -35,8 +36,9 @@ export default function CustomCreateTab() {
   const [loading, setLoading] = useState(false);
   const [newVouchers, setNewVouchers] = useState<Voucher[] | null>(null);
   const [durationUnit, setDurationUnit] = useState<TimeUnit>("days");
-  const [count, setCount] = useState(MIN_VOUCHER_COUNT);
-  const isBatch = count > 1;
+  // Kept as typed, so the field can be cleared and retyped; parsed on use.
+  const [count, setCount] = useState(String(MIN_VOUCHER_COUNT));
+  const isBatch = Number(count) > 1;
 
   const handleSubmit = async (e: SubmitEvent) => {
     e.preventDefault();
@@ -68,7 +70,8 @@ export default function CustomCreateTab() {
     const code = String(data.get("code") ?? "").trim();
     const remarks = String(data.get("remarks") ?? "");
     const problem =
-      nameError(name) ?? (isBatch ? null : keyError(code)) ?? remarksError(remarks);
+      nameError(name) ??
+      (isBatch ? null : keyError(code) ?? remarksError(remarks));
     if (problem) {
       notify(problem, "error");
       return;
@@ -80,7 +83,7 @@ export default function CustomCreateTab() {
       timeLimitMinutes: durationHours * 60,
       authorizedGuestLimit: map(data.get("guests"), parseNumber),
       code: code || undefined,
-      remarks: remarks || undefined,
+      remarks: (!isBatch && remarks) || undefined,
     };
 
     setLoading(true);
@@ -88,18 +91,13 @@ export default function CustomCreateTab() {
       const res = await api.createVoucher(payload);
       setNewVouchers(res.vouchers);
       notify(`Successfully created ${res.vouchers.length} vouchers`, "success");
+      // reset() puts the unit select back to its default; keep the state
+      // in step so the duration field matches it.
       form.reset();
-      setCount(MIN_VOUCHER_COUNT);
+      setCount(String(MIN_VOUCHER_COUNT));
+      setDurationUnit("days");
     } catch (error) {
-      const status = (error as { status?: number }).status;
-      const message = (error as Error).message;
-      if (status === 409) {
-        notify("That key is already in use", "error");
-      } else if (status === 400 && message) {
-        notify(message, "error");
-      } else {
-        notify("Failed to create voucher", "error");
-      }
+      notify(createErrorMessage(error), "error");
     }
     setLoading(false);
   };
@@ -120,7 +118,7 @@ export default function CustomCreateTab() {
             min={MIN_VOUCHER_COUNT}
             max={MAX_VOUCHER_COUNT}
             value={count}
-            onChange={(e) => setCount(Number(e.target.value) || MIN_VOUCHER_COUNT)}
+            onChange={(e) => setCount(e.target.value)}
           />
         </div>
 
@@ -156,7 +154,7 @@ export default function CustomCreateTab() {
               name="durationUnit"
               onChange={(e) => setDurationUnit(e.target.value as TimeUnit)}
               className="w-auto"
-              defaultValue="days"
+              value={durationUnit}
             >
               <option value="hours">Hours</option>
               <option value="days">Days</option>
@@ -190,7 +188,12 @@ export default function CustomCreateTab() {
 
         <div>
           <label className="block font-medium mb-1">Remarks</label>
-          <input name="remarks" type="text" placeholder="Optional" />
+          <input
+            name="remarks"
+            type="text"
+            disabled={isBatch}
+            placeholder={isBatch ? "Set by the controller for batches" : "Optional"}
+          />
         </div>
 
         <button type="submit" disabled={loading} className="btn-primary w-full">

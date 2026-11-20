@@ -3,7 +3,9 @@
 import SuccessModal from "@/components/modals/SuccessModal";
 import { Voucher, VoucherCreateData } from "@/types/voucher";
 import { api } from "@/utils/api";
+import { createErrorMessage } from "@/utils/createError";
 import { notify } from "@/utils/notifications";
+import { nameError } from "@/utils/validation";
 import { useCallback, useState, SubmitEvent } from "react";
 
 export default function QuickCreateTab() {
@@ -12,10 +14,16 @@ export default function QuickCreateTab() {
 
   const handleSubmit = async (e: SubmitEvent) => {
     e.preventDefault();
-    setLoading(true);
 
     const form = e.currentTarget as HTMLFormElement;
     const data = new FormData(form);
+
+    const problem = nameError(String(data.get("name") ?? ""));
+    if (problem) {
+      notify(problem, "error");
+      return;
+    }
+    setLoading(true);
 
     const payload: VoucherCreateData = {
       count: 1,
@@ -36,8 +44,8 @@ export default function QuickCreateTab() {
           "warning",
         );
       }
-    } catch {
-      notify("Failed to create voucher", "error");
+    } catch (error) {
+      notify(createErrorMessage(error), "error");
     }
     setLoading(false);
   };
