@@ -368,7 +368,7 @@ async fn a_delete_the_controller_ignored_is_an_error() {
 }
 
 #[tokio::test]
-async fn an_ignored_expired_cleanup_is_an_error() {
+async fn expired_passes_the_controller_already_removed_are_not_a_failed_delete() {
     let mock = Mock::start().await;
     let api = api(&mock).await;
     let gone = mock.add_pass("gone", false, 3600);
