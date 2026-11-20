@@ -68,8 +68,18 @@ description = "Verify non-source project formatting"
 run = "oxfmt --check ."
 
 [tasks.dev]
-description = "Run the backend and frontend locally (reads .env when present)"
-run = ["cd backend && cargo build --features dotenv", "cd frontend && npm run dev"]
+description = "Run the backend and frontend together locally (the backend reads .env when present)"
+depends = ["dev-backend", "dev-frontend"]
+
+[tasks.dev-backend]
+description = "Run the backend locally, reading .env when present"
+dir = "backend"
+run = "cargo run --features dotenv"
+
+[tasks.dev-frontend]
+description = "Run the frontend dev server"
+dir = "frontend"
+run = "npm run dev"
 
 [tasks.docker-build]
 description = "Build the container image for this machine"
