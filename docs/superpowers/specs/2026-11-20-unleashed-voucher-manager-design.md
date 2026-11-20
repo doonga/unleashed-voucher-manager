@@ -295,19 +295,27 @@ Manager role cannot delete. The README explains how to create one.
   - an amd64 image build without push.
 - **`.forgejo/workflows/lint.yaml`** on pull requests: actionlint and
   oxfmt check.
-- **`.forgejo/workflows/release.yaml`** on `v*` tags only (pushes to `main`
-  publish nothing) runs the same tests first and publishes nothing if they
-  fail, then builds
-  `linux/amd64` and `linux/arm64` and pushes to
-  `ghcr.io/greyrock-labs/unleashed-voucher-manager`:
-  - `vX.Y.Z` publishes `X.Y.Z`, `X.Y` and `latest`;
-  - a pre-release tag such as `vX.Y.Z-rc.1` publishes only `X.Y.Z-rc.1`.
+- **`.forgejo/workflows/release-pr.yaml`** ("Prepare release") on pushes to
+  `main`: when releasable conventional commits have landed since the last
+  version tag, a bot keeps one `chore(release): vX.Y.Z` pull request open on
+  `release/next` with the git-cliff changelog and notes. Merging it is the
+  only human release decision.
+- **`.forgejo/workflows/release.yaml`** ("Publish release") when that merge
+  changes `CHANGELOG.md` on `main`, or by hand to retry: runs the same tests
+  and publishes nothing if they fail, then builds `linux/amd64` and
+  `linux/arm64`, pushes exactly `X.Y.Z` and `latest` to
+  `ghcr.io/greyrock-labs/unleashed-voucher-manager`, signs the digest with
+  cosign (key-based; `cosign.pub` is committed), tags the commit through the
+  Forgejo API and publishes Forgejo and GitHub releases. Pushes to `main`
+  publish no images, and no other image tag ever moves.
 
   Images carry an SBOM and no provenance attestation. The
   `org.opencontainers.image.source` and `url` labels and annotations (on
   manifest and index) point at the GitHub repo so GHCR links the package.
-  The only secret is `GHCR_TOKEN`, a GitHub classic PAT with
-  `write:packages`. The package is public; GHCR creates it private on the
+  Secrets: `RELEASE_BOT_TOKEN` (the release bot's Forgejo token), `GHCR_TOKEN`
+  (a GitHub classic PAT with `write:packages` and `public_repo`, for image
+  pushes and GitHub releases), and `COSIGN_PRIVATE_KEY` with
+  `COSIGN_PASSWORD`. The package is public; GHCR creates it private on the
   first push, so it is switched to public once, right after that push.
 
 - **Multi-arch without emulation:** the runner has no QEMU. The Rust and
@@ -317,11 +325,11 @@ Manager role cannot delete. The README explains how to create one.
   from a base that already has Node and the tools the scripts need. The
   frontend's standalone output must not depend on platform-specific native
   modules at runtime, or must ship the target platform's build of them.
-- **Releases:** a signed annotated tag is the only version input, and every
-  change to code or the image gets a release. Testing before `v1.0.0` uses
-  local builds and `v1.0.0-rc.N` tags. `v1.0.0` is tagged once a release
-  candidate has passed the live check and run in a real deployment; the
-  release candidate images may then be deleted.
+- **Releases:** versions come from conventional commits (`cliff.toml`):
+  breaking changes release a major, `feat` a minor, `fix`, `perf` and
+  `fix(deps)` a patch, everything else nothing. The first release is `v1.0.0`.
+  Renovate commits shipped dependencies as `fix(deps)` and everything else as
+  `chore`. The live check passes before the first release PR is merged.
 - `README.md` follows UVM's, rewritten for Unleashed: setup, every variable,
   controller role creation, guest portal redirect, reverse proxy
   requirements, logo replacement, troubleshooting. `LICENSE` keeps UVM's MIT

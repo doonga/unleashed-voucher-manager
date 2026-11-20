@@ -13,6 +13,7 @@ wherever the controller allows.
 
 - [Features](#features)
 - [Quick start](#quick-start)
+  - [Images](#images)
   - [Docker Compose](#docker-compose)
   - [Without Docker](#without-docker)
 - [Configuration](#configuration)
@@ -66,6 +67,23 @@ wherever the controller allows.
 
 The image is `ghcr.io/greyrock-labs/unleashed-voucher-manager`. It runs as
 the `node` user (uid 1000) and listens on port 3000.
+
+### Images
+
+Images are published for `linux/amd64` and `linux/arm64`, tagged with the
+exact version (for example `1.0.0`) and `latest`. Version tags never change
+once published, so pin one, ideally with its digest, and let Renovate propose
+updates. Version numbers follow semver: a patch release only fixes things or
+updates dependencies, a minor release adds features, and a major release may
+need configuration changes. Release notes are on the GitHub releases page.
+
+Images are signed with cosign. To verify one:
+
+```bash
+cosign verify \
+  --key https://raw.githubusercontent.com/greyrock-labs/unleashed-voucher-manager/main/cosign.pub \
+  ghcr.io/greyrock-labs/unleashed-voucher-manager:1.0.0
+```
 
 ### Without Docker
 

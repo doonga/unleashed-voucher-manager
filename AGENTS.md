@@ -81,15 +81,55 @@ The controller serves real guests, so:
 - Commit to `main` as focused, signed, Conventional Commits; push low-risk
   changes without asking, and ask before anything that publishes or could
   break a deployment.
-- Images are published only from version tags; pushes to `main` publish
-  nothing. Every change to code or the image that should ship gets a
-  release: wait for the Test workflow on `main` to pass, then push a signed
-  annotated tag. The Release workflow runs the tests again on the tagged
-  commit and publishes only if they pass. `vX.Y.Z` publishes `X.Y.Z`, `X.Y`
-  and `latest`; `vX.Y.Z-rc.N` publishes only `X.Y.Z-rc.N`. Tag notes list Added, Changed
-  and Fixed for people running the app.
-- The release workflow needs the repository secret `GHCR_TOKEN`, a GitHub
-  classic PAT with `write:packages`.
+- Releases go through a release pull request, never through hand-made tags.
+  Never create, push or move a `v*` tag by hand.
+
+### Release process
+
+- `.forgejo/workflows/release-pr.yaml` ("Prepare release") runs on every push
+  to `main`. If releasable commits have landed since the last `v*` tag, the
+  `keymaker` bot force-pushes `release/next` with an updated `CHANGELOG.md` and
+  keeps one PR open, titled `chore(release): vX.Y.Z`, with the release notes as
+  its body. An open release PR stays open and is refreshed on every push; only
+  a person closes it. Running the workflow by hand (`workflow_dispatch`) opens
+  one for at least a patch even when nothing releasable is pending.
+- Merging that PR is the decision to release, and the maintainer makes it: do
+  not merge a release PR unless explicitly told to.
+  `.forgejo/workflows/release.yaml` ("Publish release") runs only when
+  `CHANGELOG.md` changes on `main`, or by hand to retry a failed release. It
+  sees an untagged version at the top of `CHANGELOG.md`, runs the tests, builds
+  `linux/amd64,linux/arm64`, pushes exactly `X.Y.Z` and `latest` to
+  `ghcr.io/greyrock-labs/unleashed-voucher-manager`, signs the digest with
+  cosign, tags the commit `vX.Y.Z` through the Forgejo API, and publishes the
+  notes as a Forgejo release and a GitHub release on the mirror. Every step can
+  be re-run safely.
+- Pushes to `main` publish no images. There are no `:main`, `:sha-*` or `X.Y`
+  tags; ask before adding any tag that moves.
+
+Versions come from conventional commits (git-cliff, `cliff.toml`; before the
+first tag, the first release is its `initial_tag`, `v1.0.0`):
+
+| Commit                                                             | Release |
+| ------------------------------------------------------------------ | ------- |
+| breaking change (`feat!:` or `BREAKING CHANGE:`)                   | major   |
+| `feat:`                                                            | minor   |
+| `fix:`, `perf:`, `fix(deps):`                                      | patch   |
+| `chore:`, `ci:`, `docs:`, `test:`, `build:`, `refactor:`, `style:` | none    |
+
+Renovate extends the shared preset but overrides its commit types in
+`.renovaterc.json5`. Frontend runtime dependencies, backend crates and the
+Rust and Node toolchains are `fix(deps)`, which releases a patch. Everything
+else is `chore` and never carries `!`.
+
+The scripts behind this live in `.forgejo/scripts/`, and
+`mise run release-scripts-test` tests them. Repository secrets:
+`RELEASE_BOT_TOKEN` (the `keymaker` Forgejo token, with repository and issue
+write plus `read:user` for its own name and email), `GHCR_TOKEN` (a GitHub
+classic PAT with `write:packages` and `public_repo`, used for image pushes and
+GitHub releases), and `COSIGN_PRIVATE_KEY` plus `COSIGN_PASSWORD` (the signing
+key; the public half is `cosign.pub`). Images carry an SBOM but no provenance
+attestation.
+
 - Renovate updates dependencies; an npm update must change
   `package-lock.json` in the same commit, or `npm ci` fails in CI.
 
