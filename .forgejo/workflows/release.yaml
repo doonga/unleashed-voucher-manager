@@ -67,7 +67,7 @@ jobs:
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
             type=ref,event=branch
-            type=sha,prefix=sha-
+            type=sha,prefix=sha-,enable={{is_default_branch}}
           labels: |
             org.opencontainers.image.source=https://github.com/greyrock-labs/unleashed-voucher-manager
             org.opencontainers.image.url=https://github.com/greyrock-labs/unleashed-voucher-manager
