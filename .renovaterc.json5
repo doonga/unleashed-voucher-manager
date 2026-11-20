@@ -1,0 +1,11 @@
+{
+  $schema: "https://docs.renovatebot.com/renovate-schema.json",
+  extends: ["config:recommended"],
+  // Keep package-lock.json in step with package.json and refresh it weekly.
+  lockFileMaintenance: { enabled: true },
+  postUpdateOptions: ["npmDedupe"],
+  // Forgejo workflows use the GitHub Actions syntax.
+  "github-actions": {
+    managerFilePatterns: ["/^\\.forgejo/workflows/.+\\.ya?ml$/"],
+  },
+}

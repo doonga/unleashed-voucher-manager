@@ -41,25 +41,25 @@ Probed against Unleashed `200.19`, logged in as a user whose role has
 `admin-priv="rw"`. Every probe pass was deleted afterwards. The live check
 re-confirms these on the target controller before release.
 
-| Behaviour | Result |
-|---|---|
-| Login | `GET /admin/login.jsp?username=…&password=…&ok=Log In` answers `302` to `dashboard.jsp` on success, `200` on bad credentials. The CSRF token is in the `HTTP_X_CSRF_TOKEN` response header. |
-| Session activation | The session is only usable after **following the redirect to `/admin/dashboard.jsp`**. Without that GET, every AJAX call answers `302` to the login page. aioruckus does not do this; this firmware needs it. |
-| Session expiry | Any AJAX call answering `302` means the session is gone. |
-| Failed logins | After a few failed logins the controller refuses logins from that source address for a short while, even with correct credentials. The account itself is not locked. |
-| List | `POST /admin/_conf.jsp`, `text/xml`, `<ajax-request action='getconf' DECRYPT_X='true' updater='guest-list.<ms>' comp='guest-list'><guest self-service='!true'/></ajax-request>` |
-| Create single | `POST /admin/mon_createguest.jsp` form, `gentype=single`. An empty `key` makes the controller generate one. Response is JSON with `result` `DONE`. The response's `ids` field is empty for single creates. |
-| Custom key | `key=<value>` is stored uppercased. A key in use answers `result=KEY_DUPLICATED`. |
-| Create batch | `gentype=multiple`, `createToNum` 2 to 100. Response has `batchEmailData.push('Guest-N|key|')` lines before the JSON, and `result` `OK`. Passes are named `Guest-N` by the controller (the submitted name is ignored) with remarks `Batch generation`. |
-| Duration units | `hour`, `day`, `week` all honoured on this path. `min` and `minute` produce `valid-time=0`, a pass that expires at once. **Minutes are not supported.** |
-| Share limit | `limitnumber=N` becomes `share-number`. `0` is unlimited devices. |
-| Remarks | Free text, stored as `remarks`. |
-| Delete | `POST /admin/_conf.jsp`, `<ajax-request action='delobj' updater='guest-list.<ms>' comp='guest-list'><guest id='N'></guest>…</ajax-request>`. Single and bulk both work. Delete is by `id` only. |
-| Key generation endpoint | `mon_guestdata.jsp` returns an empty key for this account. Not used; send an empty key instead. |
-| Expired passes | The controller removes them by itself, within seconds. |
-| Names | A name containing whitespace silently creates nothing: the response is `result=OK` echoing the previous pass's name and key. Brackets, dots and dashes are fine (`[ROLLING]-125714-192.0.2.46` was accepted). Duplicate names are allowed. |
-| Guest portal | A guest WLAN's guest service can set `redirect="url"` with `redirect-url` pointing at the app's `/welcome` page, which is what rolling vouchers need. The probed portal also had `countdown-by-issued="true"`. |
-| `countdown-by-issued` | With it set on the portal, every pass has `start-time` equal to `create-time` and expires at `create-time + valid-time` whether used or not. Use is shown only by `used="true"` and nested `<client mac=…/>` elements. |
+| Behaviour               | Result                                                                                                                                                                                                                                     |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Login                   | `GET /admin/login.jsp?username=…&password=…&ok=Log In` answers `302` to `dashboard.jsp` on success, `200` on bad credentials. The CSRF token is in the `HTTP_X_CSRF_TOKEN` response header.                                                |
+| Session activation      | The session is only usable after **following the redirect to `/admin/dashboard.jsp`**. Without that GET, every AJAX call answers `302` to the login page. aioruckus does not do this; this firmware needs it.                              |
+| Session expiry          | Any AJAX call answering `302` means the session is gone.                                                                                                                                                                                   |
+| Failed logins           | After a few failed logins the controller refuses logins from that source address for a short while, even with correct credentials. The account itself is not locked.                                                                       |
+| List                    | `POST /admin/_conf.jsp`, `text/xml`, `<ajax-request action='getconf' DECRYPT_X='true' updater='guest-list.<ms>' comp='guest-list'><guest self-service='!true'/></ajax-request>`                                                            |
+| Create single           | `POST /admin/mon_createguest.jsp` form, `gentype=single`. An empty `key` makes the controller generate one. Response is JSON with `result` `DONE`. The response's `ids` field is empty for single creates.                                 |
+| Custom key              | `key=<value>` is stored uppercased. A key in use answers `result=KEY_DUPLICATED`.                                                                                                                                                          |
+| Create batch            | `gentype=multiple`, `createToNum` 2 to 100. Response has `batchEmailData.push('Guest-N                                                                                                                                                     | key | ')`lines before the JSON, and`result` `OK`. Passes are named `Guest-N`by the controller (the submitted name is ignored) with remarks`Batch generation`. |
+| Duration units          | `hour`, `day`, `week` all honoured on this path. `min` and `minute` produce `valid-time=0`, a pass that expires at once. **Minutes are not supported.**                                                                                    |
+| Share limit             | `limitnumber=N` becomes `share-number`. `0` is unlimited devices.                                                                                                                                                                          |
+| Remarks                 | Free text, stored as `remarks`.                                                                                                                                                                                                            |
+| Delete                  | `POST /admin/_conf.jsp`, `<ajax-request action='delobj' updater='guest-list.<ms>' comp='guest-list'><guest id='N'></guest>…</ajax-request>`. Single and bulk both work. Delete is by `id` only.                                            |
+| Key generation endpoint | `mon_guestdata.jsp` returns an empty key for this account. Not used; send an empty key instead.                                                                                                                                            |
+| Expired passes          | The controller removes them by itself, within seconds.                                                                                                                                                                                     |
+| Names                   | A name containing whitespace silently creates nothing: the response is `result=OK` echoing the previous pass's name and key. Brackets, dots and dashes are fine (`[ROLLING]-125714-192.0.2.46` was accepted). Duplicate names are allowed. |
+| Guest portal            | A guest WLAN's guest service can set `redirect="url"` with `redirect-url` pointing at the app's `/welcome` page, which is what rolling vouchers need. The probed portal also had `countdown-by-issued="true"`.                             |
+| `countdown-by-issued`   | With it set on the portal, every pass has `start-time` equal to `create-time` and expires at `create-time + valid-time` whether used or not. Use is shown only by `used="true"` and nested `<client mac=…/>` elements.                     |
 
 A listed pass looks like this (key and MAC sanitised):
 
@@ -82,17 +82,17 @@ The frontend proxies `/rust-api/*` to the backend and applies
 `backend/src/unifi_api.rs` is replaced by `backend/src/unleashed_api.rs`,
 which keeps the public method set the handlers already call:
 
-| Method | Unleashed implementation |
-|---|---|
-| `try_new` | Build the HTTP client and log in |
-| `get_all_vouchers`, `get_vouchers(filter)` | List, map, filter by name in the backend |
-| `get_voucher_details(id)` | List, pick by id |
-| `get_newest_voucher` | List, max by `create-time` |
-| `get_rolling_voucher` | List, newest pass named `[ROLLING]-…` that is unused and unexpired |
-| `create_voucher(request)` | Single or batch create, then list to return the created passes |
-| `create_rolling_voucher()` | Under the create lock: return the current rolling voucher if one is waiting, otherwise create one |
-| `delete_vouchers_by_ids(ids)` | One `delobj` with every existing id. Ids must be numeric; anything else is rejected with `400` before it reaches the XML. |
-| `delete_expired_vouchers`, `delete_expired_rolling_vouchers` | List, filter expired, `delobj` |
+| Method                                                       | Unleashed implementation                                                                                                  |
+| ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------- |
+| `try_new`                                                    | Build the HTTP client and log in                                                                                          |
+| `get_all_vouchers`, `get_vouchers(filter)`                   | List, map, filter by name in the backend                                                                                  |
+| `get_voucher_details(id)`                                    | List, pick by id                                                                                                          |
+| `get_newest_voucher`                                         | List, max by `create-time`                                                                                                |
+| `get_rolling_voucher`                                        | List, newest pass named `[ROLLING]-…` that is unused and unexpired                                                        |
+| `create_voucher(request)`                                    | Single or batch create, then list to return the created passes                                                            |
+| `create_rolling_voucher()`                                   | Under the create lock: return the current rolling voucher if one is waiting, otherwise create one                         |
+| `delete_vouchers_by_ids(ids)`                                | One `delobj` with every existing id. Ids must be numeric; anything else is rejected with `400` before it reaches the XML. |
+| `delete_expired_vouchers`, `delete_expired_rolling_vouchers` | List, filter expired, `delobj`                                                                                            |
 
 The Unleashed protocol lives in `backend/src/unleashed/` as small modules
 (guest-list parsing, create request and response, session, mapping to
@@ -116,20 +116,20 @@ frontend change only where Unleashed forces it.
 The JSON the frontend sees keeps UVM's `Voucher` shape, minus the fields
 Unleashed cannot provide, plus `remarks`:
 
-| `Voucher` field | Source |
-|---|---|
-| `id` | `id` |
-| `createdAt` | `create-time`, formatted as UVM does in `TIMEZONE` |
-| `name` | `full-name`, falling back to `name` |
-| `code` | `x-key`, falling back to `key` |
-| `authorizedGuestLimit` | `share-number`; `0` maps to `null` (unlimited) |
-| `authorizedGuestCount` | number of `<client>` elements |
-| `activatedAt` | `start-time` when `used="true"` or a client is present, else `null` |
-| `expiresAt` | `expire-time` |
-| `expired` | `expire-time <= now`; an empty or zero `expire-time` is never expired |
-| `timeLimitMinutes` | `valid-time / 60` |
-| `remarks` | `remarks` (new) |
-| `dataUsageLimitMBytes`, `rxRateLimitKbps`, `txRateLimitKbps` | Removed. Unleashed has no per-pass limits. |
+| `Voucher` field                                              | Source                                                                |
+| ------------------------------------------------------------ | --------------------------------------------------------------------- |
+| `id`                                                         | `id`                                                                  |
+| `createdAt`                                                  | `create-time`, formatted as UVM does in `TIMEZONE`                    |
+| `name`                                                       | `full-name`, falling back to `name`                                   |
+| `code`                                                       | `x-key`, falling back to `key`                                        |
+| `authorizedGuestLimit`                                       | `share-number`; `0` maps to `null` (unlimited)                        |
+| `authorizedGuestCount`                                       | number of `<client>` elements                                         |
+| `activatedAt`                                                | `start-time` when `used="true"` or a client is present, else `null`   |
+| `expiresAt`                                                  | `expire-time`                                                         |
+| `expired`                                                    | `expire-time <= now`; an empty or zero `expire-time` is never expired |
+| `timeLimitMinutes`                                           | `valid-time / 60`                                                     |
+| `remarks`                                                    | `remarks` (new)                                                       |
+| `dataUsageLimitMBytes`, `rxRateLimitKbps`, `txRateLimitKbps` | Removed. Unleashed has no per-pass limits.                            |
 
 `activatedAt` cannot use `start-time` alone, because with
 `countdown-by-issued` the controller sets it at creation.
@@ -234,12 +234,12 @@ variables below and `IS_LOGO_INVERTIBLE`, which defaults to `true` for the
 bundled logo and is parsed as a boolean (environment values arrive as
 strings, and `"false"` is truthy):
 
-| Removed | Added |
-|---|---|
+| Removed                | Added                                                                   |
+| ---------------------- | ----------------------------------------------------------------------- |
 | `UNIFI_CONTROLLER_URL` | `UNLEASHED_URL` (required), for example `https://unleashed.example.com` |
-| `UNIFI_API_KEY` | `UNLEASHED_USERNAME`, `UNLEASHED_PASSWORD` (required) |
-| `UNIFI_HAS_VALID_CERT` | `UNLEASHED_HAS_VALID_CERT` (default `true`) |
-| `UNIFI_SITE_ID` | `UNLEASHED_SSID` (required): the guest WLAN passes are created on |
+| `UNIFI_API_KEY`        | `UNLEASHED_USERNAME`, `UNLEASHED_PASSWORD` (required)                   |
+| `UNIFI_HAS_VALID_CERT` | `UNLEASHED_HAS_VALID_CERT` (default `true`)                             |
+| `UNIFI_SITE_ID`        | `UNLEASHED_SSID` (required): the guest WLAN passes are created on       |
 
 The account needs a role with read-write admin privilege; the Guest Pass
 Manager role cannot delete. The README explains how to create one.
@@ -299,13 +299,14 @@ Manager role cannot delete. The README explains how to create one.
   - `main` publishes `:main` and `:sha-<short>`;
   - `vX.Y.Z` publishes `X.Y.Z`, `X.Y` and `latest`;
   - a pre-release tag such as `vX.Y.Z-rc.1` publishes only `X.Y.Z-rc.1`.
-  
+
   Images carry an SBOM and no provenance attestation. The
   `org.opencontainers.image.source` and `url` labels and annotations (on
   manifest and index) point at the GitHub repo so GHCR links the package.
   The only secret is `GHCR_TOKEN`, a GitHub classic PAT with
   `write:packages`. The package is public; GHCR creates it private on the
   first push, so it is switched to public once, right after that push.
+
 - **Multi-arch without emulation:** the runner has no QEMU. The Rust and
   Node build stages run on the build platform; Rust cross-compiles for the
   target with `cargo-zigbuild` to a static musl binary. Stages for the target

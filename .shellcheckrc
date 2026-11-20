@@ -1,0 +1,2 @@
+# Shell is used by the container entrypoint scripts.
+external-sources=true

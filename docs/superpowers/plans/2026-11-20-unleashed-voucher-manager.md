@@ -44,19 +44,21 @@
 ### Task 1: Repository tooling
 
 **Files:**
+
 - Create: `.mise/config.toml`, `.mise/mise.lock`, `.lefthook.toml`, `.oxfmtrc.json`, `.editorconfig`, `.gitattributes`, `.markdownlint.yaml`, `.shellcheckrc`, `.renovaterc.json5`, `.superpowers/sdd/.gitignore` (contents `*` and `!.gitignore`)
 - Modify: `.gitignore`, `.dockerignore`
 - Delete: `backend/.cargo/config.toml` (its `target-cpu=native` makes images CPU-specific and breaks cross-compiling)
 - Modify: `frontend/package.json` and `frontend/package-lock.json` (`name` becomes `unleashed-voucher-manager`)
 
 **Interfaces:**
+
 - Produces: mise tasks used by CI and later tasks: `build`, `test` (backend `cargo test --locked`, then frontend `npm test --if-present`), `fmt`, `fmt-check` (`cargo fmt --check`), `lint` (`cargo clippy --all-targets -- -D warnings`, `tsc --noEmit`), `oxfmt`, `oxfmt-check`, `frontend-build` (`npm ci && npm run build`), `dev`, `docker-build`, `docker-run`.
 
 - [ ] **Step 1:** Write `.mise/config.toml` with tools `rust = "1.100"`, `node = "26.13"`, `lefthook`, `oxfmt` (latest releases, pinned by `mise lock`), the tasks above, and `postinstall = "lefthook install"`. Each task `dir`s into `backend/` or `frontend/` as needed.
 - [ ] **Step 2:** `.oxfmtrc.json` sets `printWidth` 100 and ignores `backend/**`, `frontend/src/**`, `frontend/package-lock.json`. `.lefthook.toml`: pre-commit runs `fmt-check` and `oxfmt-check`; pre-push runs `test`.
 - [ ] **Step 3:** `.renovaterc.json5` extends `config:recommended`, points the `github-actions` manager at `/^\.forgejo/workflows/.+\.ya?ml$/`, and sets `postUpdateOptions: ["npmDedupe"]` with `lockFileMaintenance` enabled, so `package-lock.json` is updated with `package.json`.
 - [ ] **Step 4:** Run `mise install && mise run oxfmt && mise run fmt-check && mise run test && mise run frontend-build`.
-  Expected: UVM's own backend tests pass, the frontend has no `test` script yet so `npm test --if-present` does nothing, and the frontend builds.
+      Expected: UVM's own backend tests pass, the frontend has no `test` script yet so `npm test --if-present` does nothing, and the frontend builds.
 - [ ] **Step 5: Commit** `build: add mise, lefthook, oxfmt and Renovate configuration`
 
 ---
@@ -64,11 +66,13 @@
 ### Task 2: Guest-list parser (with fresh fixtures)
 
 **Files:**
+
 - Create: `backend/src/unleashed/mod.rs`, `backend/src/unleashed/guest.rs`
 - Create: `backend/tests/fixtures/guest_list.xml`, `backend/tests/guest.rs`
 - Modify: `backend/Cargo.toml` (`roxmltree`), `backend/src/lib.rs` (`pub mod unleashed;`)
 
 **Interfaces:**
+
 - Produces: `backend::unleashed::guest::GuestPass { id: String, name: String, key: String, remarks: String, share_number: u64, valid_time: u64, create_time: i64, start_time: Option<i64>, expire_time: Option<i64>, used: bool, client_macs: Vec<String> }` and `parse_guest_list(xml: &str) -> Result<Vec<GuestPass>, String>`. `name` is `full-name` falling back to `name`; `key` is `x-key` falling back to `key`; empty or `0` `start-time`/`expire-time` become `None`.
 
 - [ ] **Step 1: Capture fixtures.** With the controller credentials cached owner-only in the scratchpad, run a throwaway probe (scratchpad, not committed) that logs in as the spec describes, creates `probe-<ts>` passes (one single with a custom key and remarks, one batch of 2, one duplicate key), saves the raw guest-list XML and the three raw `mon_createguest.jsp` bodies, then deletes exactly the passes it created and confirms the list matches the starting list. Sanitise keys, MACs, WLAN names and any non-probe pass names (`guest-1`, `Guest`, `00:00:00:00:00:01`) and save as `backend/tests/fixtures/guest_list.xml`, `create_single.txt`, `create_batch.txt`, `create_keydup.txt`. Keep response whitespace and the batch's script prefix exactly.
@@ -90,11 +94,13 @@
 ### Task 3: Create requests and responses
 
 **Files:**
+
 - Create: `backend/src/unleashed/create.rs`, `backend/tests/create.rs`
 - Modify: `backend/src/unleashed/mod.rs`
 - Uses: the three `create_*.txt` fixtures from Task 2
 
 **Interfaces:**
+
 - Produces in `backend::unleashed::create`:
   - `pub const MAX_BATCH: u32 = 100;`
   - `pub struct CreateParams { pub count: u32, pub name: String, pub minutes: u64, pub share_limit: Option<u64>, pub key: Option<String>, pub remarks: Option<String>, pub ssid: String }`
@@ -118,7 +124,7 @@
   - `single_form` – count 1, name `"Front Desk"`, 1440 min, limit 3, key `"abc123"`, remarks `"x"`, ssid `"Guest"` gives fields `gentype=single`, `fullname=Front-Desk`, `duration=1`, `duration-unit=day`, `limitnumber=3`, `key=ABC123`, `remarks=x`, `wlan=Guest`, `createToNum=1`. No limit sends `limitnumber=0`.
   - `batch_form` – count 3 gives `gentype=multiple`, `createToNum=3`; a key with count 3 → `Err`; count 0 and 101 → `Err`.
   - `parses_single_done`, `parses_batch_ok_with_prefix_lines`, `parses_key_duplicated` (message carried), `parses_invalid_characters`, `unreadable_response_fails` – against the fixtures and an inline `{"result":"Invalid Characters detected"}`-shaped body copied from the probe output.
-  The exact form field names come from the captured request in Task 2's probe; the test asserts those names.
+    The exact form field names come from the captured request in Task 2's probe; the test asserts those names.
 - [ ] **Step 2:** `cargo test --test create` → compile error.
 - [ ] **Step 3:** Implement. `parse_create_response` strips everything before the first `{` and reads `result` (and the message field for errors).
 - [ ] **Step 4:** `cargo test --test create` → all pass.
@@ -129,10 +135,12 @@
 ### Task 4: Controller session and mock controller
 
 **Files:**
+
 - Create: `backend/src/unleashed/session.rs`, `backend/tests/support/mod.rs`, `backend/tests/session.rs`
 - Modify: `backend/Cargo.toml` (reqwest features `cookies`, `form`, `json`, `query`), `backend/src/unleashed/mod.rs`
 
 **Interfaces:**
+
 - Produces in `backend::unleashed::session`: `pub enum SessionError { Connect(String), Auth(String) }` with `Display`; `pub struct Session` with `Session::new(url: &str, username: &str, password: &str, verify_tls: bool) -> Result<Session, SessionError>`, `async fn login(&self) -> Result<(), SessionError>`, `async fn conf(&self, xml: &str) -> Result<String, SessionError>`, `async fn form(&self, page: &str, fields: &[(&'static str, String)]) -> Result<String, SessionError>`. Login happens lazily on first request if `login` was not called.
 - Test support `tests/support/mod.rs`: `Mock::start() -> Mock` (an in-process axum server), fields `url`, `state: Arc<Mutex<MockState>>`; methods `expire_sessions()`, `logins() -> usize`, `add_pass(name: &str, used: bool, expires_in: i64) -> u32`, `mark_used(id: u32)`, `pass_ids() -> Vec<u32>`, `passes() -> Vec<MockPass>`; `MockState` flags `always_redirect`, `token_in_script_only`, `ignore_creates`, `login_without_location`, `create_delay_ms: u64`, and `create_forms: Vec<Vec<(String,String)>>`; consts `USERNAME`, `PASSWORD`. The mock rejects AJAX from sessions that never loaded `dashboard.jsp`, answers `OK` without creating for names containing whitespace, names batches `Guest-N`, answers `KEY_DUPLICATED`, and serves `delobj` and `getconf`.
 
@@ -158,10 +166,12 @@
 ### Task 5: Map guest passes to vouchers
 
 **Files:**
+
 - Create: `backend/src/unleashed/mapping.rs`, `backend/tests/mapping.rs`
 - Modify: `backend/src/models.rs` (`Voucher`), `backend/src/unleashed/mod.rs`
 
 **Interfaces:**
+
 - Consumes: `GuestPass` (Task 2).
 - Produces: `Voucher` without `data_usage_limit_mbytes`, `rx_rate_limit_kbps`, `tx_rate_limit_kbps`, with `#[serde(default)] pub remarks: String`. In `backend::unleashed::mapping`: `pub const ROLLING_PREFIX: &str = "[ROLLING]-";`, `format_time(unix: i64, tz: Tz) -> String` (UVM's existing date format), `is_used(&GuestPass) -> bool`, `is_expired(&GuestPass, now: i64) -> bool`, `to_voucher(&GuestPass, tz: Tz, now: i64) -> Voucher`, `is_rolling(&GuestPass) -> bool`, `rolling_name(created: DateTime<Tz>) -> String`, `current_rolling(passes: &[GuestPass], now: i64) -> Option<&GuestPass>`.
 
@@ -183,11 +193,13 @@
 ### Task 6: Switch the backend to Unleashed
 
 **Files:**
+
 - Create: `backend/src/unleashed_api.rs`, `backend/tests/api.rs`
 - Delete: `backend/src/unifi_api.rs`; remove `percent-encoding` from `Cargo.toml`
 - Modify: `backend/src/environment.rs`, `backend/src/models.rs`, `backend/src/handlers.rs`, `backend/src/main.rs`, `backend/src/lib.rs`
 
 **Interfaces:**
+
 - Consumes: Tasks 2 to 5.
 - Produces: `backend::unleashed_api::{ApiConfig, UnleashedAPI, UNLEASHED_API}`. `ApiConfig { url, username, password, ssid: String, verify_tls: bool, timezone: Tz, rolling_voucher_duration_minutes: u64 }` with `ApiConfig::from_environment(&Environment) -> ApiConfig`. `UnleashedAPI::try_new(ApiConfig) -> Result<Self, SessionError>` and, all returning `Result<_, reqwest::StatusCode>`: `get_all_vouchers`, `get_vouchers(&VouchersGetRequest)`, `get_voucher_details(String)`, `get_newest_voucher`, `get_rolling_voucher -> Option<Voucher>`, `create_voucher(&VouchersCreateRequest) -> VouchersCreateResponse`, `create_rolling_voucher() -> Voucher`, `delete_vouchers_by_ids(Vec<String>) -> DeleteResponse`, `delete_expired_vouchers`, `delete_expired_rolling_vouchers`. `UnleashedAPI` holds `create_lock: tokio::sync::Mutex<()>`, held from the list before a create to the list after it, and across the whole rolling check-and-create. `VouchersCreateRequest` loses the data and rate fields and gains `code: Option<String>`, `remarks: Option<String>`. The rolling handler no longer reads `X-Forwarded-For`. Routes and JSON are otherwise UVM's.
 
@@ -218,10 +230,12 @@
 ### Task 7: Startup, purge and redaction hardening
 
 **Files:**
+
 - Create: `backend/tests/startup.rs`, `backend/tests/tasks.rs`, `backend/tests/redaction.rs`
 - Modify: `backend/src/main.rs`, `backend/src/lib.rs` (new `pub mod startup;` → `backend/src/startup.rs`), `backend/src/tasks.rs`, `backend/src/environment.rs`, `backend/src/unleashed_api.rs`
 
 **Interfaces:**
+
 - Produces: `backend::startup::retry_delay(attempt: u32) -> std::time::Duration` (5 s, doubling, capped at 300 s) and `backend::startup::describe(&SessionError) -> String` (names `UNLEASHED_USERNAME`/`UNLEASHED_PASSWORD` for `Auth`, `UNLEASHED_URL` for `Connect`, never the values); `backend::tasks::next_midnight(now: DateTime<Tz>) -> DateTime<Tz>`; hand-written `Debug` for `Environment` and `ApiConfig` printing `<redacted>` for the password.
 
 - [ ] **Step 1: Write failing tests:**
@@ -238,10 +252,12 @@
 ### Task 8: Port the frontend
 
 **Files:**
+
 - Create: `frontend/src/utils/boolean.ts`, `frontend/src/utils/boolean.test.ts`, `frontend/src/utils/validation.ts`, `frontend/src/utils/validation.test.ts`, `frontend/src/utils/forwarded.ts`, `frontend/src/utils/forwarded.test.ts`
 - Modify: `frontend/src/types/voucher.ts`, `frontend/src/utils/api.ts`, `frontend/src/components/tabs/CustomCreateTab.tsx`, `frontend/src/types/print.ts`, `frontend/src/types/config.ts`, `frontend/src/utils/format.ts`, `frontend/src/app/print/page.tsx`, `frontend/src/components/modals/VoucherModal.tsx`, `frontend/src/components/VoucherCard.tsx`, `frontend/src/components/tabs/TestTab.tsx`, `frontend/src/app/kiosk/page.tsx`, `frontend/src/app/welcome/page.tsx`, `frontend/src/proxy.ts`, `frontend/src/utils/runtimeConfig.ts` (or wherever `IS_LOGO_INVERTIBLE` is read), `frontend/src/app/layout.tsx`, `frontend/src/components/Header.tsx`, `frontend/tsconfig.json` (`allowImportingTsExtensions` if `node --test` needs `.ts` imports)
 
 **Interfaces:**
+
 - Consumes: backend JSON from Task 6 (`remarks`, no data or rate fields; create takes `code`, `remarks`; `409` key taken; `400` with the backend's message).
 - Produces: `parseBoolean(value: unknown, fallback: boolean): boolean` (`true/yes/1/on`, `false/no/0/off`, case- and space-insensitive); `nameError(name: string): string | null`, `remarksError(remarks: string): string | null`, `keyError(key: string): string | null` with the same character rules as the backend; `clientIpFromForwarded(header: string | null): string | null` (last entry, trimmed, `::ffff:` stripped, `null` if not an IPv4/IPv6 address); constants `MAX_VOUCHER_COUNT = 100`, `MIN_VOUCHER_KEY_LENGTH = 2`, `MAX_VOUCHER_KEY_LENGTH = 16` in `utils/api.ts`; `PrintConfig` keeps `showName` and drops `showDataUsageLimit`, `showRxRateLimit`, `showTxRateLimit`.
 
@@ -269,10 +285,12 @@
 ### Task 9: RUCKUS logos and dark-mode header
 
 **Files:**
+
 - Modify: `frontend/public/logo.svg`, `frontend/src/app/favicon.ico`, `frontend/src/app/favicon.svg`, `frontend/src/app/apple-touch-icon.png`, `frontend/src/components/Header.tsx`, `frontend/src/components/utils/WifiQr.tsx`
 - Create: `frontend/public/qr-logo.svg`
 
 **Interfaces:**
+
 - Produces: `WifiQr`'s default `imageSrc` is `/qr-logo.svg`; the header shows `/logo.svg` and, when `IS_LOGO_INVERTIBLE` and the theme is dark, applies `invert hue-rotate-180`.
 
 - [ ] **Step 1:** From `RUCKUS-Networks-Endorsed-Logo_black-orange.svg` in the RUCKUS logo suite (supplied locally by the maintainer; not committed), keep the dog, collar and bars, drop the wordmark and tagline, and centre them on a square white rounded tile with a black border inset so it is not clipped. Write it as `qr-logo.svg` and `logo.svg` (same artwork). Generate the favicons and touch icon from it.
@@ -286,11 +304,13 @@
 ### Task 10: Multi-arch container
 
 **Files:**
+
 - Modify: `Dockerfile`, `scripts/entrypoint.sh` and `scripts/healthcheck.sh` only if the new base requires it, `.dockerignore`
 - Delete: `compose.yaml`
 - Create: `docker-compose.yml`, `.env.example`
 
 **Interfaces:**
+
 - Consumes: tool versions from `.mise/config.toml` via build args `RUST_VERSION`, `NODE_VERSION`.
 - Produces: `docker buildx build --platform linux/amd64,linux/arm64 .` builds without QEMU; the `runtime` stage is the final stage; the image listens on `3000` and keeps UVM's healthcheck.
 
@@ -308,9 +328,11 @@
 ### Task 11: Forgejo workflows
 
 **Files:**
+
 - Create: `.forgejo/workflows/test.yaml`, `.forgejo/workflows/lint.yaml`, `.forgejo/workflows/release.yaml`, `.forgejo/actionlint.yaml`
 
 **Interfaces:**
+
 - Consumes: mise tasks (Task 1), the Dockerfile (Task 10).
 - Produces: CI on pull requests and `main`; images on `main` and `v*` tags. Secret: `GHCR_TOKEN` (GitHub username `doonga` in the login step, as the package owner's account).
 
@@ -325,6 +347,7 @@
 ### Task 12: Documentation
 
 **Files:**
+
 - Modify: `README.md` (rewrite), `LICENSE` (add `Copyright (c) 2026 Todd Punderson` after UVM's line)
 - Create: `AGENTS.md`
 

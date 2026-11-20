@@ -1,0 +1,9 @@
+{
+  "printWidth": 100,
+  "ignorePatterns": [
+    "backend/**",
+    "frontend/src/**",
+    "frontend/package-lock.json",
+    ".superpowers/**"
+  ]
+}

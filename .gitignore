@@ -1,2 +1,9 @@
+# Local configuration and tool caches
 .env
+.mise.local.toml
+.claude/
+
+# Editor / OS files
 .DS_Store
+.idea/
+.vscode/
