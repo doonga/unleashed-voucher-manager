@@ -1,0 +1,127 @@
+@import "../globals.css";
+
+@utility text-xxs {
+  @apply text-[10px];
+}
+@utility boxed {
+  @apply border-1 border-black p-1 w-full;
+}
+@utility top-border {
+  @apply border-t-2 border-black pt-2 w-full;
+}
+
+/* Print page settings */
+@media print {
+  @page {
+    size: auto;
+    margin: 4; /* ~3mm is too fine; browsers usually round to ~4px */
+  }
+  html,
+  body {
+    overflow: visible !important;
+    height: auto !important;
+    width: auto !important;
+    position: static !important;
+    touch-action: auto !important;
+    background: white !important;
+    color: black !important;
+  }
+}
+
+/* Layout */
+.print-wrapper {
+  @apply p-1 m-0 bg-white text-black font-mono text-sm leading-snug;
+}
+.print-list {
+  @apply flex flex-col gap-1 max-w-[80mm] mx-auto;
+}
+.print-grid {
+  @apply grid gap-1 grid-cols-[repeat(auto-fill,minmax(250px,1fr))];
+}
+
+/* Voucher */
+.print-voucher {
+  @apply flex-center flex-col gap-2 border-2 border-black px-3 py-2 w-full;
+}
+
+/* Voucher header */
+.print-header {
+  @apply flex-center flex-col gap-2 text-center w-full;
+}
+.print-title {
+  @apply font-bold text-lg;
+}
+.print-voucher-code {
+  @apply text-xl font-bold boxed;
+}
+.print-name {
+  @apply flex flex-col boxed border-dashed;
+}
+.print-name-label {
+  @apply text-xs font-semibold uppercase tracking-wider;
+}
+.print-name-value {
+  @apply text-xxs break-words wrap-anywhere;
+}
+
+/* Voucher info */
+.print-info {
+  @apply flex flex-col w-full;
+  flex: 1 1 1fr;
+}
+.print-info-row {
+  @apply flex justify-between gap-1 border-b border-dotted border-black;
+}
+.print-label {
+  @apply shrink-0 font-semibold;
+}
+.print-value {
+  @apply min-w-0 flex-1 text-right;
+}
+
+/* WiFi connection section */
+.print-qr-section {
+  @apply flex-center-between flex-col gap-1 top-border;
+}
+.print-qr-title {
+  @apply text-xs font-bold uppercase tracking-widest;
+}
+.print-network-details {
+  @apply boxed border-dashed text-xxs;
+}
+.print-credential {
+  @apply flex justify-between gap-1 py-1;
+}
+.print-credential:first-child {
+  @apply pb-1 pt-0;
+}
+.print-credential:last-child {
+  @apply pb-0 pt-1;
+}
+.print-credential + .print-credential {
+  @apply border-t border-dashed border-black;
+}
+.print-credential-label {
+  @apply shrink-0 font-semibold uppercase tracking-wide;
+}
+.print-credential-value {
+  @apply min-w-0 flex-1 text-right wrap-anywhere break-words;
+}
+.print-network-note {
+  @apply font-semibold uppercase tracking-wider text-center border-t border-dashed border-black pt-1;
+}
+
+/* Voucher metadata footer */
+.print-footer {
+  @apply flex flex-col gap-1 top-border text-xxs;
+}
+.print-footer-item {
+  @apply flex flex-col;
+  flex: 1 1 1fr;
+}
+.print-footer-label {
+  @apply font-semibold uppercase tracking-wide;
+}
+.print-footer-value {
+  @apply wrap-anywhere break-words;
+}
