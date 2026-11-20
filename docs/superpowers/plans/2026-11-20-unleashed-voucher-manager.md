@@ -36,7 +36,7 @@
 - **The arm64 image is built on amd64 and never run there.** Expected: both architectures start, pass the healthcheck and serve `/`. Pinned by Task 10, Step 4 (`docker run --platform` for each).
 - **UVM's default names contain spaces** ("Quick Voucher"). Expected: created as `Quick-Voucher`, not a silent failure. Pinned by `creates_a_single_pass_with_a_spaced_name` (Task 6).
 - **The controller answers OK but creates nothing.** Expected: `502`, never a phantom success. Pinned by `an_ok_that_creates_nothing_is_an_error` (Task 6).
-- **A guest forges the first `X-Forwarded-For` entry** (`10.9.9.9, 192.168.50.7` from a guest at `192.168.50.7`). Expected: treated as `192.168.50.7` and blocked from admin pages. Pinned by `uses the last forwarded entry` (Task 8).
+- **A guest forges the first `X-Forwarded-For` entry** (`198.51.100.9, 192.0.2.7` from a guest at `192.0.2.7`). Expected: treated as `192.0.2.7` and blocked from admin pages. Pinned by `uses the last forwarded entry` (Task 8).
 - **Staff type ordinary remarks** ("Bob's phone, room 4"). Expected: created. "<b>" gets a `400` naming the character. Pinned by `remarks_allow_apostrophes_and_commas` and `remarks_reject_angle_brackets` (Task 3).
 
 ---
@@ -264,7 +264,7 @@
 - [ ] **Step 1: Write failing tests** (`node --test`), and add `"test": "node --test \"src/**/*.test.ts\""` to `frontend/package.json` (the quoted glob is required: the runner's Node treats a bare directory as a file):
   - `boolean.test.ts`: `environment strings become booleans` (`"true"`, `"TRUE"`, `" yes "`, `"1"` → true; `"false"`, `"0"`, `"no"` → false), `unreadable values use the fallback` (`undefined`, `""`, `"maybe"`), `real booleans pass through`.
   - `validation.test.ts`: `names reject what the controller refuses` (each character from the Global Constraints), `names allow dashes brackets and dots`, `remarks allow apostrophes and commas`, `remarks reject angle brackets`, `non-ASCII is rejected`, `keys follow the length and character rules`.
-  - `forwarded.test.ts`: `uses the last forwarded entry` (`"10.9.9.9, 192.168.50.7"` → `"192.168.50.7"`), `single entry`, `strips IPv4-mapped prefix`, `rejects junk` (`"hello"`, `""`, `null` → `null`).
+  - `forwarded.test.ts`: `uses the last forwarded entry` (`"198.51.100.9, 192.0.2.7"` → `"192.0.2.7"`), `single entry`, `strips IPv4-mapped prefix`, `rejects junk` (`"hello"`, `""`, `null` → `null`).
 - [ ] **Step 2:** `cd frontend && npm test` → fails (modules missing).
 - [ ] **Step 3:** Implement the three utilities; `npm test` → passes.
 - [ ] **Step 4:** Change `types/voucher.ts` (drop data and rate fields, add `remarks: string`; create data gains optional `code`, `remarks`), then `npx tsc --noEmit` → errors list every remaining use. Fix them:

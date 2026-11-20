@@ -3,8 +3,8 @@ import assert from "node:assert/strict";
 import { clientIpFromForwarded } from "./forwarded.ts";
 
 test("uses the last forwarded entry", () => {
-  assert.equal(clientIpFromForwarded("10.9.9.9, 192.168.50.7"), "192.168.50.7");
-  assert.equal(clientIpFromForwarded("10.9.9.9,192.0.2.4 , 192.0.2.7"), "192.0.2.7");
+  assert.equal(clientIpFromForwarded("198.51.100.9, 192.0.2.7"), "192.0.2.7");
+  assert.equal(clientIpFromForwarded("198.51.100.9,192.0.2.4 , 192.0.2.7"), "192.0.2.7");
 });
 
 test("single entry", () => {
@@ -17,7 +17,7 @@ test("strips IPv4-mapped prefix", () => {
 });
 
 test("rejects junk", () => {
-  for (const value of ["hello", "", null, "192.0.2", "999.1.1.1", "10.9.9.9, nope"]) {
+  for (const value of ["hello", "", null, "192.0.2", "999.1.1.1", "198.51.100.9, nope"]) {
     assert.equal(clientIpFromForwarded(value), null, String(value));
   }
 });
