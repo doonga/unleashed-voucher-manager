@@ -255,6 +255,9 @@ Manager role cannot delete. The README explains how to create one.
 - **Credentials stay out of logs:** login sends the password in the query
   string, so request URLs never reach logs or error messages, and the
   configuration's `Debug` output redacts the password.
+- **Configuration:** an `UNLEASHED_URL` that does not parse as a URL with a
+  host, and a `ROLLING_VOUCHER_DURATION_MINUTES` of 0, stop the app at startup
+  with a message naming the setting.
 - **Startup:** connection attempts are retried after 5 seconds, doubling up
   to 5 minutes, and the log says whether the controller refused the
   credentials or could not be reached. Retrying slowly instead of exiting lets

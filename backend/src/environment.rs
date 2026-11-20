@@ -28,53 +28,67 @@ impl Environment {
         #[cfg(feature = "dotenv")]
         dotenvy::dotenv().map_err(|e| format!("Failed to load .env file: {e}"))?;
 
-        let required = |name: &str| match env::var(name) {
-            Ok(value) if !value.trim().is_empty() => Ok(value.trim().to_string()),
-            Ok(_) => Err(format!("{name} is empty")),
-            Err(e) => Err(format!("{name}: {e}")),
+        Self::from_lookup(|name| env::var(name).ok())
+    }
+
+    /// Read and check the configuration from `get`, which returns a
+    /// variable's value if it is set. Invalid settings are refused here, at
+    /// startup, rather than failing every request later.
+    pub fn from_lookup(get: impl Fn(&str) -> Option<String>) -> Result<Self, String> {
+        let required = |name: &str| match get(name) {
+            Some(value) if !value.trim().is_empty() => Ok(value.trim().to_string()),
+            Some(_) => Err(format!("{name} is empty")),
+            None => Err(format!("{name} is not set")),
         };
 
         let unleashed_url = required("UNLEASHED_URL")?;
         if !unleashed_url.starts_with("http://") && !unleashed_url.starts_with("https://") {
             return Err("UNLEASHED_URL must start with http:// or https://".to_string());
         }
+        match reqwest::Url::parse(&unleashed_url) {
+            Ok(url) if url.host_str().is_some_and(|h| !h.is_empty()) => {}
+            Ok(_) => return Err("UNLEASHED_URL has no host".to_string()),
+            Err(e) => return Err(format!("UNLEASHED_URL is not a valid URL: {e}")),
+        }
         let unleashed_username = required("UNLEASHED_USERNAME")?;
-        let unleashed_password = env::var("UNLEASHED_PASSWORD")
-            .ok()
+        let unleashed_password = get("UNLEASHED_PASSWORD")
             .filter(|v| !v.is_empty())
             .ok_or("UNLEASHED_PASSWORD is not set")?;
         let unleashed_ssid = required("UNLEASHED_SSID")?;
 
         let backend_bind_host: String =
-            env::var("BACKEND_BIND_HOST").unwrap_or(DEFAULT_BACKEND_BIND_HOST.to_owned());
-        let backend_bind_port: u16 = match env::var("BACKEND_BIND_PORT") {
-            Ok(port_str) => port_str
+            get("BACKEND_BIND_HOST").unwrap_or(DEFAULT_BACKEND_BIND_HOST.to_owned());
+        let backend_bind_port: u16 = match get("BACKEND_BIND_PORT") {
+            Some(port_str) => port_str
                 .parse()
                 .map_err(|e| format!("Invalid BACKEND_BIND_PORT: {e}"))?,
-            Err(_) => DEFAULT_BACKEND_BIND_PORT,
+            None => DEFAULT_BACKEND_BIND_PORT,
         };
 
-        let rolling_voucher_duration_minutes = match env::var("ROLLING_VOUCHER_DURATION_MINUTES") {
-            Ok(val) => val
+        let rolling_voucher_duration_minutes = match get("ROLLING_VOUCHER_DURATION_MINUTES") {
+            Some(val) => val
                 .parse()
                 .map_err(|e| format!("Invalid ROLLING_VOUCHER_DURATION_MINUTES: {e}"))?,
-            Err(_) => DEFAULT_ROLLING_VOUCHER_DURATION_MINUTES,
+            None => DEFAULT_ROLLING_VOUCHER_DURATION_MINUTES,
         };
+        if rolling_voucher_duration_minutes == 0 {
+            return Err("ROLLING_VOUCHER_DURATION_MINUTES must be at least 1".to_string());
+        }
 
-        let purge_all_expired_vouchers: bool = match env::var("PURGE_ALL_EXPIRED_VOUCHERS") {
-            Ok(val) => Self::parse_bool(&val)
+        let purge_all_expired_vouchers: bool = match get("PURGE_ALL_EXPIRED_VOUCHERS") {
+            Some(val) => Self::parse_bool(&val)
                 .map_err(|e| format!("Invalid PURGE_ALL_EXPIRED_VOUCHERS: {e}"))?,
-            Err(_) => false,
+            None => false,
         };
 
-        let unleashed_has_valid_cert: bool = match env::var("UNLEASHED_HAS_VALID_CERT") {
-            Ok(val) => Self::parse_bool(&val)
+        let unleashed_has_valid_cert: bool = match get("UNLEASHED_HAS_VALID_CERT") {
+            Some(val) => Self::parse_bool(&val)
                 .map_err(|e| format!("Invalid UNLEASHED_HAS_VALID_CERT: {e}"))?,
-            Err(_) => true,
+            None => true,
         };
 
-        let timezone: Tz = match env::var("TIMEZONE") {
-            Ok(s) => match s.parse() {
+        let timezone: Tz = match get("TIMEZONE") {
+            Some(s) => match s.parse() {
                 Ok(tz) => {
                     info!("Using timezone: {}", s);
                     tz
@@ -84,7 +98,7 @@ impl Environment {
                     Tz::UTC
                 }
             },
-            Err(_) => {
+            None => {
                 info!("TIMEZONE environment variable not set, defaulting to UTC");
                 Tz::UTC
             }
