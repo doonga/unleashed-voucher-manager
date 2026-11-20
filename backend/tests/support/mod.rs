@@ -54,6 +54,8 @@ pub struct MockState {
     pub login_without_location: bool,
     /// Delay each create, so concurrent creates overlap.
     pub create_delay_ms: u64,
+    /// Answer every create as if it contained invalid characters.
+    pub reject_as_invalid: bool,
 }
 
 #[derive(Clone)]
@@ -319,7 +321,7 @@ async fn create_guest(
     let field = |k: &str| form.get(k).cloned().unwrap_or_default();
     let name = field("fullname");
 
-    if field("remarks").contains(['<', '>']) {
+    if s.reject_as_invalid || field("remarks").contains(['<', '>']) {
         return create_response("null", "Invalid Characters detected in {1}.", "", "null")
             .into_response();
     }
