@@ -287,7 +287,7 @@ Manager role cannot delete. The README explains how to create one.
 
 - Hosted on Forgejo, push-mirrored to
   `github.com/greyrock-labs/unleashed-voucher-manager`.
-- **`.forgejo/workflows/test.yaml`** on pull requests and pushes to `main`:
+- **`.forgejo/workflows/test.yaml`** on pull requests:
   - backend: `cargo fmt --check`, `cargo clippy -- -D warnings`,
     `cargo test --locked`;
   - frontend: `npm ci`, `tsc --noEmit`, `npm test` (`node --test` over
@@ -296,7 +296,8 @@ Manager role cannot delete. The README explains how to create one.
 - **`.forgejo/workflows/lint.yaml`** on pull requests: actionlint and
   oxfmt check.
 - **`.forgejo/workflows/release.yaml`** on pushes to `main` and `v*` tags
-  builds `linux/amd64` and `linux/arm64` and pushes to
+  runs the same tests first and publishes nothing if they fail, then builds
+  `linux/amd64` and `linux/arm64` and pushes to
   `ghcr.io/greyrock-labs/unleashed-voucher-manager`:
   - `main` publishes `:main` and `:sha-<short>`;
   - `vX.Y.Z` publishes `X.Y.Z`, `X.Y` and `latest`;

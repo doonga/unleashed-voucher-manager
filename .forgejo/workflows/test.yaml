@@ -2,11 +2,10 @@
 # yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
 name: Test
 
+# Pushes to main and release tags run the same tests in the Release workflow
+# before anything is published.
 on:
   pull_request:
-  push:
-    branches:
-      - main
 
 concurrency:
   group: ${{ forgejo.ref }}-${{ forgejo.workflow }}

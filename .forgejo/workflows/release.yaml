@@ -14,6 +14,34 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # Nothing is published unless the tests pass on the same commit.
+  test:
+    name: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install tools
+        uses: https://github.com/jdx/mise-action@90f833d396d0cc3674b631d2d225e306476c303a # v5.2.10
+
+      - name: Install frontend dependencies
+        run: mise run frontend-install
+
+      - name: Check Rust formatting
+        run: mise run fmt-check
+
+      - name: Lint
+        run: mise run lint
+
+      - name: Test
+        run: mise run test
+
+      - name: Build frontend
+        run: mise run frontend-build
+
   versions:
     name: versions
     runs-on: ubuntu-latest
@@ -37,7 +65,7 @@ jobs:
 
   image:
     name: image
-    needs: versions
+    needs: [test, versions]
     runs-on: docker
     steps:
       - name: Checkout
