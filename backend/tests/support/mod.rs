@@ -56,6 +56,8 @@ pub struct MockState {
     pub create_delay_ms: u64,
     /// Answer every create as if it contained invalid characters.
     pub reject_as_invalid: bool,
+    /// Answer deletes normally but delete nothing.
+    pub ignore_deletes: bool,
 }
 
 #[derive(Clone)]
@@ -256,7 +258,9 @@ async fn conf(
             .skip(1)
             .filter_map(|rest| rest.split('\'').next()?.parse().ok())
             .collect();
-        s.passes.retain(|p| !ids.contains(&p.id));
+        if !s.ignore_deletes {
+            s.passes.retain(|p| !ids.contains(&p.id));
+        }
         return "<?xml version=\"1.0\" encoding=\"utf-8\"?><ajax-response>\
                 <response type=\"object\" id=\"guest-list.1\" /></ajax-response>"
             .into_response();

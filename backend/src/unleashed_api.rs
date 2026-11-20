@@ -326,6 +326,18 @@ impl UnleashedAPI {
             Utc::now().timestamp_millis()
         );
         self.session.conf(&xml).await?;
+
+        // The controller's answer to a delete says nothing useful, so check
+        // the guest list instead, as creates do.
+        let remaining: HashSet<String> = self.passes().await?.into_iter().map(|p| p.id).collect();
+        let kept = ids.iter().filter(|id| remaining.contains(*id)).count();
+        if kept > 0 {
+            error!("The controller accepted a delete but kept {kept} pass(es)");
+            return Err(ApiError::new(
+                StatusCode::BAD_GATEWAY,
+                format!("The controller did not delete {kept} voucher(s)"),
+            ));
+        }
         Ok(())
     }
 

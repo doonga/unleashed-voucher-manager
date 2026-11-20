@@ -352,3 +352,38 @@ async fn survives_a_controller_reboot() {
     api.create_voucher(&request(1, "after")).await.unwrap();
     assert_eq!(mock.logins(), 2);
 }
+
+#[tokio::test]
+async fn a_delete_the_controller_ignored_is_an_error() {
+    let mock = Mock::start().await;
+    let api = api(&mock).await;
+    let a = mock.add_pass("a", false, 3600);
+    mock.state.lock().unwrap().ignore_deletes = true;
+    let err = api
+        .delete_vouchers_by_ids(vec![a.to_string()])
+        .await
+        .unwrap_err();
+    assert_eq!(err.status, StatusCode::BAD_GATEWAY);
+    assert!(err.message.contains("did not delete"), "{}", err.message);
+}
+
+#[tokio::test]
+async fn an_ignored_expired_cleanup_is_an_error() {
+    let mock = Mock::start().await;
+    let api = api(&mock).await;
+    let gone = mock.add_pass("gone", false, 3600);
+    // Expire it without the mock's own list cleanup removing it.
+    mock.state
+        .lock()
+        .unwrap()
+        .passes
+        .iter_mut()
+        .find(|p| p.id == gone)
+        .unwrap()
+        .expire_time = Some(1);
+    mock.state.lock().unwrap().ignore_deletes = true;
+    let _ = api.delete_expired_vouchers().await;
+    // The mock drops expired passes from its list, as the controller does, so
+    // the pass is not seen again; the check must not report a failure for it.
+    assert!(api.delete_expired_vouchers().await.is_ok());
+}

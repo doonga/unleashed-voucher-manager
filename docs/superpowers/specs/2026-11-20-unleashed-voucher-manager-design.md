@@ -83,17 +83,17 @@ The frontend proxies `/rust-api/*` to the backend and applies
 `backend/src/unifi_api.rs` is replaced by `backend/src/unleashed_api.rs`,
 which keeps the public method set the handlers already call:
 
-| Method                                                       | Unleashed implementation                                                                                                  |
-| ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------- |
-| `try_new`                                                    | Build the HTTP client and log in                                                                                          |
-| `get_all_vouchers`, `get_vouchers(filter)`                   | List, map, filter by name in the backend                                                                                  |
-| `get_voucher_details(id)`                                    | List, pick by id                                                                                                          |
-| `get_newest_voucher`                                         | List, max by `create-time`                                                                                                |
-| `get_rolling_voucher`                                        | List, newest pass named `[ROLLING]-…` that is unused and unexpired                                                        |
-| `create_voucher(request)`                                    | Single or batch create, then list to return the created passes                                                            |
-| `create_rolling_voucher()`                                   | Under the create lock: return the current rolling voucher if one is waiting, otherwise create one                         |
-| `delete_vouchers_by_ids(ids)`                                | One `delobj` with every existing id. Ids must be numeric; anything else is rejected with `400` before it reaches the XML. |
-| `delete_expired_vouchers`, `delete_expired_rolling_vouchers` | List, filter expired, `delobj`                                                                                            |
+| Method                                                       | Unleashed implementation                                                                                                                                                              |
+| ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `try_new`                                                    | Build the HTTP client and log in                                                                                                                                                      |
+| `get_all_vouchers`, `get_vouchers(filter)`                   | List, map, filter by name in the backend                                                                                                                                              |
+| `get_voucher_details(id)`                                    | List, pick by id                                                                                                                                                                      |
+| `get_newest_voucher`                                         | List, max by `create-time`                                                                                                                                                            |
+| `get_rolling_voucher`                                        | List, newest pass named `[ROLLING]-…` that is unused and unexpired                                                                                                                    |
+| `create_voucher(request)`                                    | Single or batch create, then list to return the created passes                                                                                                                        |
+| `create_rolling_voucher()`                                   | Under the create lock: return the current rolling voucher if one is waiting, otherwise create one                                                                                     |
+| `delete_vouchers_by_ids(ids)`                                | One `delobj` with every existing id, then a list to confirm they are gone (`502` if any remain). Ids must be numeric; anything else is rejected with `400` before it reaches the XML. |
+| `delete_expired_vouchers`, `delete_expired_rolling_vouchers` | List, filter expired, `delobj`                                                                                                                                                        |
 
 The Unleashed protocol lives in `backend/src/unleashed/` as small modules
 (guest-list parsing, create request and response, session, mapping to
