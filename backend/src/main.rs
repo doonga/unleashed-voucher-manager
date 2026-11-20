@@ -10,6 +10,7 @@ use tracing_subscriber::EnvFilter;
 use backend::{
     environment::{ENVIRONMENT, Environment},
     handlers::*,
+    startup::{describe, retry_delay},
     tasks::run_daily_purge,
     unleashed_api::{ApiConfig, UNLEASHED_API, UnleashedAPI},
 };
@@ -47,6 +48,7 @@ async fn main() {
     // Connect to the Unleashed controller
     // =================================
     let config = ApiConfig::from_environment(environment);
+    let mut attempt = 0;
     loop {
         match UnleashedAPI::try_new(config.clone()).await {
             Ok(api) => {
@@ -57,9 +59,11 @@ async fn main() {
                 break;
             }
             Err(e) => {
-                error!("Could not connect to the Unleashed controller: {e}");
-                warn!("Retrying connection in 5 seconds...");
-                tokio::time::sleep(std::time::Duration::from_secs(5)).await;
+                let delay = retry_delay(attempt);
+                error!("{}", describe(&e));
+                warn!("Retrying the connection in {} seconds", delay.as_secs());
+                tokio::time::sleep(delay).await;
+                attempt = attempt.saturating_add(1);
             }
         }
     }
