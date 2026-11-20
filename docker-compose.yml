@@ -1,0 +1,35 @@
+---
+# Unleashed Voucher Manager: create and manage Ruckus Unleashed guest passes.
+# See the README for every setting.
+services:
+  unleashed-voucher-manager:
+    image: ghcr.io/greyrock-labs/unleashed-voucher-manager:latest
+    container_name: unleashed-voucher-manager
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      # Required
+      UNLEASHED_URL: ${UNLEASHED_URL} # e.g. https://unleashed.example.com
+      UNLEASHED_USERNAME: ${UNLEASHED_USERNAME} # role with read-write admin privilege
+      UNLEASHED_PASSWORD: ${UNLEASHED_PASSWORD}
+      UNLEASHED_SSID: ${UNLEASHED_SSID} # guest WLAN the vouchers are for
+
+      # Recommended
+      WIFI_SSID: ${WIFI_SSID:-}
+      WIFI_PASSWORD: ${WIFI_PASSWORD:-}
+      WIFI_TYPE: ${WIFI_TYPE:-nopass}
+      GUEST_SUBNETWORK: ${GUEST_SUBNETWORK:-} # e.g. 192.0.2.0/24
+      TIMEZONE: ${TIMEZONE:-UTC}
+
+      # Optional (shown with defaults)
+      UNLEASHED_HAS_VALID_CERT: ${UNLEASHED_HAS_VALID_CERT:-true}
+      ROLLING_VOUCHER_DURATION_MINUTES: ${ROLLING_VOUCHER_DURATION_MINUTES:-480}
+      PURGE_ALL_EXPIRED_VOUCHERS: ${PURGE_ALL_EXPIRED_VOUCHERS:-false}
+      IS_LOGO_INVERTIBLE: ${IS_LOGO_INVERTIBLE:-true}
+    # Replace the header logo or the QR code's centre image. The mount paths
+    # cannot change. Set IS_LOGO_INVERTIBLE=false for a logo that should not
+    # be inverted in dark mode.
+    # volumes:
+    #   - ./my-logo.svg:/app/frontend/public/logo.svg:ro
+    #   - ./my-qr-logo.svg:/app/frontend/public/qr-logo.svg:ro

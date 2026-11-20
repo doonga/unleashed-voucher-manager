@@ -1,6 +1,5 @@
 **
 
-!backend/.cargo/**
 !backend/src/**
 !backend/Cargo.lock
 !backend/Cargo.toml
@@ -9,7 +8,6 @@
 !frontend/next.config.ts
 !frontend/package-lock.json
 !frontend/package.json
-!frontend/postcss.config.mjs
 !frontend/public/**
 !frontend/src/**
 !frontend/tsconfig.json
