@@ -1,8 +1,10 @@
 # syntax=docker/dockerfile:1
 
-# Versions come from .mise/config.toml; CI passes them as build arguments.
-ARG RUST_VERSION=1.100.0
-ARG NODE_VERSION=26.13.1
+# Versions come only from .mise/config.toml, so they cannot drift: CI passes
+# them as build arguments, and locally `mise run docker-build` does. There are
+# deliberately no defaults; a build without them fails at the first FROM.
+ARG RUST_VERSION
+ARG NODE_VERSION
 
 # Every build stage runs on the build host and produces output for the target
 # platform, so multi-arch builds need no emulation. Stages built for the

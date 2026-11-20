@@ -321,6 +321,10 @@ Manager role cannot delete. The README explains how to create one.
   `COSIGN_PASSWORD`. The package is public; GHCR creates it private on the
   first push, so it is switched to public once, right after that push.
 
+- **One source of versions:** the Dockerfile's `RUST_VERSION` and `NODE_VERSION`
+  build arguments have no defaults; CI and `mise run docker-build` pass the
+  versions from `.mise/config.toml`. Renovate tracks `cargo-zigbuild` in the
+  Dockerfile with a regex manager.
 - **Multi-arch without emulation:** the runner has no QEMU. The Rust and
   Node build stages run on the build platform; Rust cross-compiles for the
   target with `cargo-zigbuild` to a static musl binary. Stages for the target

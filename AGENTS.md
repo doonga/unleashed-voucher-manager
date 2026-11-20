@@ -36,7 +36,8 @@ Dockerfile                   amd64 and arm64 without emulation (cargo-zigbuild, 
 mise pins Rust, Node, lefthook and oxfmt and holds the tasks (`mise tasks`):
 `mise run test`, `lint`, `fmt-check`, `oxfmt-check`, `frontend-build`,
 `docker-build`. lefthook runs the format checks before commits and the tests
-before pushes. oxfmt formats YAML, JSON and Markdown only; `backend/` and
+before pushes. Build the image with `mise run docker-build`: the Dockerfile has no
+version defaults, so the Rust and Node versions always come from mise. oxfmt formats YAML, JSON and Markdown only; `backend/` and
 `frontend/src/` keep UVM's formatting so later UVM changes port cleanly.
 
 ## Testing

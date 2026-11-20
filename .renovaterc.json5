@@ -8,6 +8,15 @@
   "github-actions": {
     managerFilePatterns: ["/^\\.forgejo/workflows/.+\\.ya?ml$/"],
   },
+  // cargo-zigbuild is installed in the Dockerfile's build stage.
+  customManagers: [
+    {
+      customType: "regex",
+      managerFilePatterns: ["/^Dockerfile$/"],
+      matchStrings: ["cargo install --locked (?<depName>cargo-zigbuild)@(?<currentValue>[0-9.]+)"],
+      datasourceTemplate: "crate",
+    },
+  ],
   // Commit types decide releases (see cliff.toml): fix releases a patch, chore
   // releases nothing. These rules come after the shared preset's, so they win
   // over its feat/feat! types for minor and major updates.
