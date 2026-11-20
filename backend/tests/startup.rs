@@ -23,5 +23,6 @@ fn auth_errors_name_the_credentials() {
 fn connect_errors_name_the_url() {
     let text = describe(&SessionError::Connect("timed out".into()));
     assert!(text.contains("UNLEASHED_URL"), "{text}");
+    assert!(text.contains("UNLEASHED_HAS_VALID_CERT"), "{text}");
     assert!(text.contains("timed out"), "{text}");
 }

@@ -26,7 +26,11 @@ pub fn describe(error: &SessionError) -> String {
              this address for a while."
         ),
         SessionError::Connect(e) => {
-            format!("The controller could not be reached ({e}). Check UNLEASHED_URL.")
+            format!(
+                "The controller could not be reached ({e}). Check UNLEASHED_URL, and set \
+                 UNLEASHED_HAS_VALID_CERT=false if the controller uses its own \
+                 self-signed certificate."
+            )
         }
     }
 }

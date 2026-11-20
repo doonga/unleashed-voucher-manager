@@ -84,7 +84,10 @@ async fn unreachable_controller_is_a_connect_error() {
     let url = format!("http://{}", listener.local_addr().unwrap());
     drop(listener);
     let s = Session::new(&url, USERNAME, PASSWORD, true).unwrap();
-    assert!(matches!(s.login().await, Err(SessionError::Connect(_))));
+    let err = s.login().await.unwrap_err();
+    assert!(matches!(err, SessionError::Connect(_)));
+    // The cause, not just reqwest's "error sending request", reaches the log.
+    assert!(err.to_string().to_lowercase().contains("refused"), "{err}");
 }
 
 #[tokio::test]

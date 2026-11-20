@@ -53,7 +53,20 @@ pub struct Session {
 /// A reqwest error without the request URL, which for a login carries the
 /// password in its query string.
 fn connect_error(e: reqwest::Error) -> SessionError {
-    SessionError::Connect(e.without_url().to_string())
+    // reqwest's own message is only the kind of failure ("error sending
+    // request"); the cause, such as a refused connection or an untrusted
+    // certificate, is in the source chain, which carries no URL.
+    let e = e.without_url();
+    let mut message = e.to_string();
+    let mut source = std::error::Error::source(&e);
+    while let Some(cause) = source {
+        let text = cause.to_string();
+        if !message.contains(&text) {
+            message = format!("{message}: {text}");
+        }
+        source = cause.source();
+    }
+    SessionError::Connect(message)
 }
 
 /// A URL with any query string removed, safe to put in errors and logs.
